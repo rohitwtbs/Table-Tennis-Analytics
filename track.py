@@ -11,13 +11,19 @@ model = YOLO('yolov8m.pt')
 video_path = "video.mp4"
 cap = cv2.VideoCapture(video_path)
 
+# Get video properties
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)
+dt = 1/fps # time difference between frames
+
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('tracked_video.mp4', fourcc, fps, (width, height))
+
 # Store the track history
 # defaultdict is used to easily append to a list for a new track ID
 track_history = defaultdict(lambda: [])
-
-# Get video properties
-fps = cap.get(cv2.CAP_PROP_FPS)
-dt = 1/fps # time difference between frames
 
 # Pixel to meter conversion
 # This is a critical parameter for accurate speed calculation.
@@ -85,6 +91,8 @@ while cap.isOpened():
                 # Display the speed
                 cv2.putText(annotated_frame, f"Speed: {speed_kmh:.2f} km/h", (int(x), int(y-h/2)), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
 
+        # Write the frame to the output video
+        out.write(annotated_frame)
 
         # Display the annotated frame
         cv2.imshow("YOLOv8 Tracking", annotated_frame)
@@ -98,4 +106,5 @@ while cap.isOpened():
 
 # Release the video capture object and close the display window
 cap.release()
+out.release()
 cv2.destroyAllWindows()
